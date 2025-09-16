@@ -1,0 +1,14 @@
+{
+  "name": "stampin_up",
+  "version": "1.0.0",
+  "description": "Technical Test",
+  "main": "cypress.config.js",
+  "scripts": {
+    "test": "npx cypress run"
+  },
+  "author": "Micah Flowers",
+  "license": "ISC",
+  "devDependencies": {
+    "cypress": "^15.2.0"
+  }
+}
