@@ -1,0 +1,50 @@
+{
+    "users": [
+        {
+            "fname": "Micah",
+            "lname": "Test0",
+            "email": "micahtest@micahtester.com",
+            "contactPref": "Text Message",
+            "contactPrefAbbr": "text",
+            "birthday": {
+                "month_2digit": "01",
+                "day_2digit": "01",
+                "month": "Jan",
+                "day": "1",
+                "year": "2001"
+            },
+            "birthdayFormatted": "1/1/2001",
+            "phone": "8018004555",
+            "address": {
+                "addr1": "1234 Tester St.",
+                "addr2": "Apt #3",
+                "city": "Riverton",
+                "state": "Utah",
+                "zip": "84065"
+            }
+        },
+        {
+            "fname": "James",
+            "lname": "Test1",
+            "email": "micahtest@micahtester.com",
+            "contactPref": "Email",
+            "contactPrefAbbr": "email",
+            "birthday": {
+                "month_2digit": "02",
+                "day_2digit": "03",
+                "month": "Feb",
+                "day": "3",
+                "year": "2004"
+            },
+            "birthdayFormatted": "2/3/2004",
+            "phone": "8018004556",
+            "address": {
+                "addr1": "4321 Tester St.",
+                "addr2": "Apt #2",
+                "city": "Paris",
+                "state": "Idaho",
+                "zip": "83261"
+            }
+        }
+    ]
+}

@@ -1,3 +1,5 @@
+require('dotenv').config()
+
 module.exports = {
   chromeWebSecurity: false,
   video: false,
@@ -9,8 +11,12 @@ module.exports = {
   },
   e2e: {
     setupNodeEvents(on, config) {
-      // implement node event listeners here
+
     },
     baseUrl: 'https://stampinup.com',
   },
+  env: {
+    USERNAME: process.env.USERNAME,
+    PASSWORD: process.env.PASSWORD,
+  }
 };
