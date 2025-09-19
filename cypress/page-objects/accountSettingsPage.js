@@ -1,6 +1,7 @@
 /// <reference types="cypress" />
 
 // Element finders
+const accountNavAddressesLink = '[data-testid="account-nav"] a[href="/account/address"]';
 const birthdateInput = '[data-testid="birthday-date-picker"]';
 const contactCard = '[data-testid="account-card-contact"]';
 const datePickerTable = '.v-date-picker-table button';
@@ -9,14 +10,14 @@ const editContactButton = `${contactCard} [data-testid="edit-contact-setting"]`;
 const emailTextBox = '[data-testid="account-card-email"]';
 const firstNameTextBox = '[data-testid="account-card-firstName"]';
 const lastNameTextBox = '[data-testid="account-card-lastName"]';
-const menuItems = '.v-menu__content .v-list-item'
+const menuItems = '.v-menu__content .v-list-item';
 const phoneNumberTextBox = '[data-testid="account-card-phone"]';
 const saveChangesButton = '[data-testid="save-changes"]';
 
 export class AccountSettingsPage {
     // Page Functions
     updateBirthdate(date) {
-        this.getBirthdateInput().click()
+        this.getBirthdateInput().click();
         this.getDatePickerYears().contains(date.year).click();
         this.getDatePickerTable().contains(date.month).click();
         cy.get('.v-date-picker-table button').contains(date.day).click();
@@ -28,6 +29,9 @@ export class AccountSettingsPage {
     }
 
     // Get Elements
+    getAccountNavAddressesLink() {
+        return cy.get(accountNavAddressesLink);
+    }
     getBirthdateInput() {
         return cy.get(birthdateInput);
     }
@@ -57,7 +61,7 @@ export class AccountSettingsPage {
     }
 
     getMenuItems() {
-        return cy.get(menuItems).filter(':visible')
+        return cy.get(menuItems).filter(':visible');
     }
 
     getPhoneNumberTextBox() {
@@ -74,9 +78,7 @@ export class AccountSettingsPage {
     }
 
     getPreferredContactMethodValue() {
-        return cy.get('label~.v-select__selections .v-select__selection')
-        // .contains('Preferred Method of Contact')
-        // .find('~.v-select__selections .v-select__selection')
+        return cy.get('label~.v-select__selections .v-select__selection');
     }
 
     getSaveChangesButton() {

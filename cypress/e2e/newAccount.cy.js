@@ -1,0 +1,224 @@
+/// <reference types="cypress" />
+
+import { HomePage } from "../page-objects/homePage";
+import { AuthenticationModal } from "../modals/authenticationModal";
+import { AccountSettingsPage } from "../page-objects/accountSettingsPage";
+import usersInfo from "../fixtures/userInfo.json";
+import { AccountAddressPage } from "../page-objects/accountAddressPage";
+
+const homePage = new HomePage();
+const authModal = new AuthenticationModal();
+const accountSettingsPage = new AccountSettingsPage();
+const accountAddressPage = new AccountAddressPage();
+const userInfo = usersInfo.users[0];
+const locale = Cypress.env('LOCALE');
+
+
+describe('New Account Tests', () => {
+    beforeEach(() => {
+        // Add intercepts and aliases
+        cy.intercept('POST', `${locale}/account`).as('createUser');
+        cy.intercept('POST', `${locale}/account/sign-in`).as('signIn');
+        cy.intercept('PUT', `/${locale}/account/contact`).as('updateUser');
+        cy.intercept('POST', `/${locale}/address`).as('updateAddress');
+
+        // Create a unique email for the new user
+        userInfo.email = `${crypto.randomUUID().split('-')[0]}@${userInfo.email.split('@')[1]}`;
+
+        // Open create account form for each test
+        homePage.visit();
+        homePage.getSignInButton().click();
+        authModal.getCreateAccountButton().click();
+    });
+
+    it('Create new account and update info', function() {
+        completeAccountForm();
+
+        // Validate POST account create user api request
+        cy.wait('@createUser').then(({ request, response }) => {
+            const {
+                email,
+                firstName,
+                lastName,
+            } = request.body.customer
+
+            expect(email).to.eq(userInfo.email);
+            expect(firstName).to.eq(userInfo.fname);
+            expect(lastName).to.eq(userInfo.lname);
+
+            expect(response.statusCode).to.eq(200);
+        })
+        
+        // Validate the new user is signed in
+        cy.wait('@signIn').its('response.statusCode').should('eq', 200);
+
+        // Handle Join Stampin' Rewards modal
+        homePage.getStampinRewardsMaybeLaterButton().click();
+        homePage.getCloseDialogButton().click();
+        homePage.getCloseDialogButton().click();
+
+        // Go to Account Settings
+        homePage.goToAccountSettings();
+        accountSettingsPage.getEditContactButton().click();
+        accountSettingsPage.getPhoneNumberTextBox().type(userInfo.phone);
+        accountSettingsPage.updatePreferredContactMethod(userInfo.contactPref);
+        accountSettingsPage.updateBirthdate(userInfo.birthday);
+
+        // Save the changes
+        accountSettingsPage.getSaveChangesButton().click();
+
+        // Validate account/contact api request
+        cy.wait('@updateUser').then(({ request, response }) => {
+            const {
+                birthday,
+                email,
+                firstName,
+                lastName,
+                newEmail,
+                phoneNumber,
+                preferredContact
+            } = request.body
+
+            expect(birthday).to.eq(
+                `${userInfo.birthday.year}-${userInfo.birthday.month_2digit}-${userInfo.birthday.day_2digit}`
+            );
+            expect(email).to.eq(userInfo.email);
+            expect(firstName).to.eq(userInfo.fname);
+            expect(lastName).to.eq(userInfo.lname);
+            expect(newEmail).to.eq(userInfo.email);
+            expect(phoneNumber.replace(/[^0-9]/g, '')).to.eq(userInfo.phone);
+            expect(preferredContact).to.eq(userInfo.contactPrefAbbr);
+
+            // Validate account/contact response status
+            expect(response.statusCode, 'Response should be successful').to.eq(200);
+        })
+
+        //Validate UI
+        accountSettingsPage.getBirthdateInput().invoke('val').should('eq', userInfo.birthdayFormatted);
+        accountSettingsPage.getEmailTextBox().invoke('val').should('eq', userInfo.email);
+        accountSettingsPage.getFirstNameTextBox().invoke('val').should('eq', userInfo.fname);
+        accountSettingsPage.getLastNameTextBox().invoke('val').should('eq', userInfo.lname);
+        accountSettingsPage.getPhoneNumberTextBox().invoke('val').then((value) => {
+            expect(value.replace(/[^0-9]/g, '')).to.eq(userInfo.phone);
+        })
+        accountSettingsPage.getPreferredContactMethodValue().should('contain.text', userInfo.contactPref);
+
+        accountSettingsPage.getAccountNavAddressesLink().click();
+        accountAddressPage.getAddress1TextBox().should('be.visible');
+
+        // Update Address
+        accountAddressPage.getFirstNameTextBox().type(userInfo.fname);
+        accountAddressPage.getLastNameTextBox().type(userInfo.lname);
+        accountAddressPage.getAddress1TextBox().type(userInfo.address.addr1);
+        accountAddressPage.getAddress2TextBox().type(userInfo.address.addr2);
+        accountAddressPage.getCityTextBox().type(userInfo.address.city);
+        accountAddressPage.updateState(userInfo.address.state);
+        accountAddressPage.getZipCodeTextBox().type(userInfo.address.zip);
+        accountAddressPage.getPhoneNumberTextBox().type(userInfo.phone);
+        accountAddressPage.getDefaultShippingAddressCheckBox().click();
+
+        // Save the changes
+        accountAddressPage.getSaveAddressButton().click();
+
+        // Validate address api request
+        cy.wait('@updateAddress').then(({ request, response }) => {
+            const {
+                addressLine1,
+                addressLine2,
+                city,
+                firstName,
+                lastName,
+                phoneNumber,
+                postalCode,
+                region
+            } = request.body
+
+            expect(addressLine1).to.eq(userInfo.address.addr1);
+            expect(addressLine2).to.eq(userInfo.address.addr2);
+            expect(city).to.eq(userInfo.address.city);
+            expect(firstName).to.eq(userInfo.fname);
+            expect(lastName).to.eq(userInfo.lname);
+            expect(phoneNumber.replace(/[^0-9]/g, '')).to.eq(userInfo.phone);
+            expect(postalCode).to.eq(userInfo.address.zip);
+            expect(region).to.eq(userInfo.address.region);
+
+            // Validate address api response status
+            expect(response.statusCode, 'Update address request should be successful').to.eq(200);
+        })
+
+        // Validate UI
+        accountAddressPage.getEditShippingAddressButton().click();
+        accountAddressPage.getFirstNameTextBox().invoke('val').should('eq', userInfo.fname);
+        accountAddressPage.getLastNameTextBox().invoke('val').should('eq', userInfo.lname);
+        accountAddressPage.getAddress1TextBox().invoke('val').should('eq', userInfo.address.addr1);
+        accountAddressPage.getAddress2TextBox().invoke('val').should('eq', userInfo.address.addr2);
+        accountAddressPage.getCityTextBox().invoke('val').should('eq', userInfo.address.city);
+        accountAddressPage.getZipCodeTextBox().invoke('val').should('eq', userInfo.address.zip);
+    })
+
+    it('Create new account - Missing first name', function() {
+        completeAccountForm({ enterFirstName: false });
+        authModal.getErrorMessages().should('contain.text', 'The First Name field is required.');
+    })
+
+    it('Create new account - Missing last name', function() {
+        completeAccountForm({ enterLastName: false });
+        authModal.getErrorMessages().should('contain.text', 'The Last Name field is required.');
+    })
+
+    it('Create new account - Missing email', function() {
+        completeAccountForm({ enterEmail: false });
+        authModal.getErrorMessages().should('contain.text', 'The Email Address field is required.');
+    })
+
+    it('Create new account - Missing password', function() {
+        completeAccountForm({ enterPassword: false });
+        authModal.getErrorMessages().should('contain.text', 'The Password field is required.');
+    })
+
+    it('Create new account - Missing confirm password', function() {
+        completeAccountForm({ enterConfirmPassword: false });
+        authModal.getErrorMessages().should('contain.text', 'The Password field is required.');
+    })
+
+    it('Create new account - Password does not match confirmation', function() {
+        completeAccountForm({ confirmPassword: 'DOES NOT MATCH' });
+        authModal.getErrorMessages().should('contain.text', 'The Password field confirmation does not match.');
+    })
+
+    
+    const completeAccountForm = (options = {}) => {
+        const {
+            enterFirstName = true,
+            enterLastName = true,
+            enterEmail = true,
+            enterPassword = true,
+            enterConfirmPassword = true,
+            password = Cypress.env('PASSWORD'),
+            confirmPassword = Cypress.env('PASSWORD')
+        } = options;
+
+        if(enterFirstName) {
+            authModal.getFirstNameTextBox().type(userInfo.fname);
+        }
+        
+        if(enterLastName) {
+            authModal.getLastNameTextBox().type(userInfo.lname);
+        }
+        
+        if(enterEmail) {
+            authModal.getEmailTextBox().type(userInfo.email);
+        }
+        
+        if(enterPassword) {
+            authModal.getPasswordTextBox().type(password, { log: false }); // don't log passwords
+        }
+        
+        if(enterConfirmPassword) {
+            authModal.getConfirmPasswordTextBox().type(confirmPassword, {log: false }); // don't log passwords
+        }
+
+        // Submit Form
+        authModal.getNewAccountCreateAccountButton().click();
+    }
+})

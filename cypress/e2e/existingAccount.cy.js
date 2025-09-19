@@ -3,19 +3,25 @@
 import { HomePage } from "../page-objects/homePage";
 import { AuthenticationModal } from "../modals/authenticationModal";
 import { AccountSettingsPage } from "../page-objects/accountSettingsPage";
-import userInfo from "../fixtures/userInfo.json"
+import { AccountAddressPage } from "../page-objects/accountAddressPage";
+import userInfo from "../fixtures/userInfo.json";
 
 const homePage = new HomePage();
 const authModal = new AuthenticationModal();
 const accountSettingsPage = new AccountSettingsPage();
+const accountAddressPage = new AccountAddressPage();
+const locale = Cypress.env('LOCALE');
 
 describe('Existing Account Tests', () => {
 
     beforeEach(() => {
         // Add intercepts and aliases
-        cy.intercept('POST', '/en-us/account/sign-in').as('signIn');
-        cy.intercept('PUT', '/en-us/account/contact').as('updateUser');
-    })
+        cy.intercept('POST', `/${locale}/account/sign-in`).as('signIn');
+        cy.intercept('PUT', `/${locale}/account/contact`).as('updateUser');
+        cy.intercept('PUT', `/${locale}/address`).as('updateAddress');
+        cy.intercept('GET', `${locale}/address`).as('getAddress');
+        cy.intercept('GET', `${locale}/address/countries`).as('getCountries');
+    });
     
     it('Sign in', function() {
         signIn();
@@ -52,6 +58,8 @@ describe('Existing Account Tests', () => {
 
     it('Update user profile', function() {
         signIn();
+        cy.wait('@signIn');
+        authModal.getAuthModal().should('not.exist');
 
         // Open account settings
         homePage.goToAccountSettings();
@@ -61,7 +69,7 @@ describe('Existing Account Tests', () => {
         accountSettingsPage.getFirstNameTextBox()
         .invoke('val')
         .then((val) => {
-            const selectedUserInfo = userInfo.users.find(u => u.fname !== val)
+            const selectedUserInfo = userInfo.users.find(u => u.fname !== val);
             
             // Update the Contact Info
             accountSettingsPage.getFirstNameTextBox().clear().type(selectedUserInfo.fname);
@@ -112,7 +120,71 @@ describe('Existing Account Tests', () => {
     })
 
     it('Update Address', function() {
+        signIn();
+        cy.wait('@signIn');
+        authModal.getAuthModal().should('not.exist');
 
+        // Open account address page
+        homePage.goToAddresses();
+        cy.wait('@getAddress');
+        accountAddressPage.getEditShippingAddressButton().click();
+        cy.wait('@getCountries');
+
+        // Wait for the address fields to be displayed on the page
+        accountAddressPage.getAddress1TextBox().should('be.visible');
+
+        // Select the address to use
+        accountAddressPage.getFirstNameTextBox().invoke('val').then((val) => {
+            const selectedAddress = userInfo.users.find(u => u.fname !== val);
+
+            // Update Address
+            accountAddressPage.getFirstNameTextBox().clear().type(selectedAddress.fname);
+            accountAddressPage.getLastNameTextBox().clear().type(selectedAddress.lname);
+            accountAddressPage.getAddress1TextBox().clear().type(selectedAddress.address.addr1);
+            accountAddressPage.getAddress2TextBox().clear().type(selectedAddress.address.addr2);
+            accountAddressPage.getCityTextBox().clear().type(selectedAddress.address.city);
+            accountAddressPage.updateState(selectedAddress.address.state);
+            accountAddressPage.getZipCodeTextBox().clear().type(selectedAddress.address.zip);
+            accountAddressPage.getPhoneNumberTextBox().clear().type(selectedAddress.phone);
+
+            // Save the changes
+            accountAddressPage.getSaveAddressButton().click();
+
+            // Validate address api request
+            cy.wait('@updateAddress').then(({ request, response }) => {
+                const {
+                    addressLine1,
+                    addressLine2,
+                    city,
+                    firstName,
+                    lastName,
+                    phoneNumber,
+                    postalCode,
+                    region
+                } = request.body
+
+                expect(addressLine1).to.eq(selectedAddress.address.addr1);
+                expect(addressLine2).to.eq(selectedAddress.address.addr2);
+                expect(city).to.eq(selectedAddress.address.city);
+                expect(firstName).to.eq(selectedAddress.fname);
+                expect(lastName).to.eq(selectedAddress.lname);
+                expect(phoneNumber.replace(/[^0-9]/g, '')).to.eq(selectedAddress.phone);
+                expect(postalCode).to.eq(selectedAddress.address.zip);
+                expect(region).to.eq(selectedAddress.address.region);
+
+                // Validate address api response status
+                expect(response.statusCode, 'Update address request should be successful').to.eq(200);
+            })
+
+            // Validate UI
+            accountAddressPage.getEditShippingAddressButton().click();
+            accountAddressPage.getFirstNameTextBox().invoke('val').should('eq', selectedAddress.fname);
+            accountAddressPage.getLastNameTextBox().invoke('val').should('eq', selectedAddress.lname);
+            accountAddressPage.getAddress1TextBox().invoke('val').should('eq', selectedAddress.address.addr1);
+            accountAddressPage.getAddress2TextBox().invoke('val').should('eq', selectedAddress.address.addr2);
+            accountAddressPage.getCityTextBox().invoke('val').should('eq', selectedAddress.address.city);
+            accountAddressPage.getZipCodeTextBox().invoke('val').should('eq', selectedAddress.address.zip);
+        })
     })
 
     const signIn = (options = {}) => {

@@ -5,7 +5,7 @@ const authModal = '[data-testid="authentication"]';
 const confirmPasswordTextBox = 'input[data-testid="reg-password-confirmation"]';
 const createAccountButton = '[data-testid="btn-create-account"]';
 const newAccountCreateAccountButton = '[data-testid="reg-submit"]';
-const emailTextBox = 'data-testid="reg-email"]';
+const emailTextBox = '[data-testid="reg-email"]';
 const firstNameTextBox = '[data-testid="reg-first-name"]';
 const idTextBox = `[data-testid="auth-email"]`;
 const lastNameTextBox = '[data-testid="reg-last-name"]';

@@ -20,6 +20,7 @@
                 "addr2": "Apt #3",
                 "city": "Riverton",
                 "state": "Utah",
+                "region": "UT",
                 "zip": "84065"
             }
         },
@@ -43,6 +44,7 @@
                 "addr2": "Apt #2",
                 "city": "Paris",
                 "state": "Idaho",
+                "region": "ID",
                 "zip": "83261"
             }
         }

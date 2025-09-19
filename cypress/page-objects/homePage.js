@@ -1,12 +1,14 @@
 /// <reference types="cypress" />
 
 // Element finders
+const closeDialogButton = '[data-testid="close-dialog"]';
+const dialog = '.v-dialog';
 const signInButton = '[data-testid="menu-user-btn-signin"]';
 const userAccountButton = '[data-testid="menu-user-firstname"]';
 
 // Menu items
 const accountSettingsLink = 'a[href="/account/settings"]';
-const addressesLink = 'a[href="/account/settings"]';
+const addressesLink = 'a[href="/account/address"]';
 
 export class HomePage {
     // Page Functions
@@ -33,8 +35,16 @@ export class HomePage {
         return cy.get(addressesLink);
     }
 
+    getCloseDialogButton() {
+        return cy.get(closeDialogButton);
+    }
+
     getSignInButton() {
         return cy.get(signInButton);
+    }
+
+    getStampinRewardsMaybeLaterButton() {
+        return cy.get(`${dialog} button`).contains('Maybe Later');
     }
 
     getUserAccountButton() {

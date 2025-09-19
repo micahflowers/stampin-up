@@ -18,5 +18,6 @@ module.exports = {
   env: {
     USERNAME: process.env.USERNAME,
     PASSWORD: process.env.PASSWORD,
+    LOCALE: process.env.LOCALE || 'en-us'
   }
 };
