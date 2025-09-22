@@ -81,41 +81,8 @@ describe('Existing Account Tests', () => {
             // Save the changes
             accountSettingsPage.getSaveChangesButton().click();
     
-            // Validate account/contact api request
-            cy.wait('@updateUser').then(({ request, response }) => {
-                const {
-                    birthday,
-                    email,
-                    firstName,
-                    lastName,
-                    newEmail,
-                    phoneNumber,
-                    preferredContact
-                } = request.body
-    
-                expect(birthday).to.eq(
-                    `${selectedUserInfo.birthday.year}-${selectedUserInfo.birthday.month_2digit}-${selectedUserInfo.birthday.day_2digit}`
-                );
-                expect(email).to.eq(selectedUserInfo.email);
-                expect(firstName).to.eq(selectedUserInfo.fname);
-                expect(lastName).to.eq(selectedUserInfo.lname);
-                expect(newEmail).to.eq(selectedUserInfo.email);
-                expect(phoneNumber.replace(/[^0-9]/g, '')).to.eq(selectedUserInfo.phone);
-                expect(preferredContact).to.eq(selectedUserInfo.contactPrefAbbr);
-
-                // Validate account/contact response status
-                expect(response.statusCode, 'Response should be successful').to.eq(200);
-            })
-
-            //Validate UI
-            accountSettingsPage.getBirthdateInput().invoke('val').should('eq', selectedUserInfo.birthdayFormatted);
-            accountSettingsPage.getEmailTextBox().invoke('val').should('eq', selectedUserInfo.email);
-            accountSettingsPage.getFirstNameTextBox().invoke('val').should('eq', selectedUserInfo.fname);
-            accountSettingsPage.getLastNameTextBox().invoke('val').should('eq', selectedUserInfo.lname);
-            accountSettingsPage.getPhoneNumberTextBox().invoke('val').then((value) => {
-                expect(value.replace(/[^0-9]/g, '')).to.eq(selectedUserInfo.phone);
-            })
-            accountSettingsPage.getPreferredContactMethodValue().should('contain.text', selectedUserInfo.contactPref);
+            // Validate profile changes
+            accountSettingsPage.validateUpdateProfile(selectedUserInfo);
         })
     })
 
@@ -150,40 +117,8 @@ describe('Existing Account Tests', () => {
             // Save the changes
             accountAddressPage.getSaveAddressButton().click();
 
-            // Validate address api request
-            cy.wait('@updateAddress').then(({ request, response }) => {
-                const {
-                    addressLine1,
-                    addressLine2,
-                    city,
-                    firstName,
-                    lastName,
-                    phoneNumber,
-                    postalCode,
-                    region
-                } = request.body
-
-                expect(addressLine1).to.eq(selectedAddress.address.addr1);
-                expect(addressLine2).to.eq(selectedAddress.address.addr2);
-                expect(city).to.eq(selectedAddress.address.city);
-                expect(firstName).to.eq(selectedAddress.fname);
-                expect(lastName).to.eq(selectedAddress.lname);
-                expect(phoneNumber.replace(/[^0-9]/g, '')).to.eq(selectedAddress.phone);
-                expect(postalCode).to.eq(selectedAddress.address.zip);
-                expect(region).to.eq(selectedAddress.address.region);
-
-                // Validate address api response status
-                expect(response.statusCode, 'Update address request should be successful').to.eq(200);
-            })
-
-            // Validate UI
-            accountAddressPage.getEditShippingAddressButton().click();
-            accountAddressPage.getFirstNameTextBox().invoke('val').should('eq', selectedAddress.fname);
-            accountAddressPage.getLastNameTextBox().invoke('val').should('eq', selectedAddress.lname);
-            accountAddressPage.getAddress1TextBox().invoke('val').should('eq', selectedAddress.address.addr1);
-            accountAddressPage.getAddress2TextBox().invoke('val').should('eq', selectedAddress.address.addr2);
-            accountAddressPage.getCityTextBox().invoke('val').should('eq', selectedAddress.address.city);
-            accountAddressPage.getZipCodeTextBox().invoke('val').should('eq', selectedAddress.address.zip);
+            // Validate address changes
+            accountAddressPage.validateUpdateAddress(selectedAddress);
         })
     })
 

@@ -67,42 +67,10 @@ describe('New Account Tests', () => {
         // Save the changes
         accountSettingsPage.getSaveChangesButton().click();
 
-        // Validate account/contact api request
-        cy.wait('@updateUser').then(({ request, response }) => {
-            const {
-                birthday,
-                email,
-                firstName,
-                lastName,
-                newEmail,
-                phoneNumber,
-                preferredContact
-            } = request.body
+        // Validate profile changes
+        accountSettingsPage.validateUpdateProfile(userInfo);
 
-            expect(birthday).to.eq(
-                `${userInfo.birthday.year}-${userInfo.birthday.month_2digit}-${userInfo.birthday.day_2digit}`
-            );
-            expect(email).to.eq(userInfo.email);
-            expect(firstName).to.eq(userInfo.fname);
-            expect(lastName).to.eq(userInfo.lname);
-            expect(newEmail).to.eq(userInfo.email);
-            expect(phoneNumber.replace(/[^0-9]/g, '')).to.eq(userInfo.phone);
-            expect(preferredContact).to.eq(userInfo.contactPrefAbbr);
-
-            // Validate account/contact response status
-            expect(response.statusCode, 'Response should be successful').to.eq(200);
-        })
-
-        //Validate UI
-        accountSettingsPage.getBirthdateInput().invoke('val').should('eq', userInfo.birthdayFormatted);
-        accountSettingsPage.getEmailTextBox().invoke('val').should('eq', userInfo.email);
-        accountSettingsPage.getFirstNameTextBox().invoke('val').should('eq', userInfo.fname);
-        accountSettingsPage.getLastNameTextBox().invoke('val').should('eq', userInfo.lname);
-        accountSettingsPage.getPhoneNumberTextBox().invoke('val').then((value) => {
-            expect(value.replace(/[^0-9]/g, '')).to.eq(userInfo.phone);
-        })
-        accountSettingsPage.getPreferredContactMethodValue().should('contain.text', userInfo.contactPref);
-
+        // Go to address page
         accountSettingsPage.getAccountNavAddressesLink().click();
         accountAddressPage.getAddress1TextBox().should('be.visible');
 
@@ -120,40 +88,8 @@ describe('New Account Tests', () => {
         // Save the changes
         accountAddressPage.getSaveAddressButton().click();
 
-        // Validate address api request
-        cy.wait('@updateAddress').then(({ request, response }) => {
-            const {
-                addressLine1,
-                addressLine2,
-                city,
-                firstName,
-                lastName,
-                phoneNumber,
-                postalCode,
-                region
-            } = request.body
-
-            expect(addressLine1).to.eq(userInfo.address.addr1);
-            expect(addressLine2).to.eq(userInfo.address.addr2);
-            expect(city).to.eq(userInfo.address.city);
-            expect(firstName).to.eq(userInfo.fname);
-            expect(lastName).to.eq(userInfo.lname);
-            expect(phoneNumber.replace(/[^0-9]/g, '')).to.eq(userInfo.phone);
-            expect(postalCode).to.eq(userInfo.address.zip);
-            expect(region).to.eq(userInfo.address.region);
-
-            // Validate address api response status
-            expect(response.statusCode, 'Update address request should be successful').to.eq(200);
-        })
-
-        // Validate UI
-        accountAddressPage.getEditShippingAddressButton().click();
-        accountAddressPage.getFirstNameTextBox().invoke('val').should('eq', userInfo.fname);
-        accountAddressPage.getLastNameTextBox().invoke('val').should('eq', userInfo.lname);
-        accountAddressPage.getAddress1TextBox().invoke('val').should('eq', userInfo.address.addr1);
-        accountAddressPage.getAddress2TextBox().invoke('val').should('eq', userInfo.address.addr2);
-        accountAddressPage.getCityTextBox().invoke('val').should('eq', userInfo.address.city);
-        accountAddressPage.getZipCodeTextBox().invoke('val').should('eq', userInfo.address.zip);
+        // Validate address changes
+        accountAddressPage.validateUpdateAddress(userInfo);
     })
 
     it('Create new account - Missing first name', function() {

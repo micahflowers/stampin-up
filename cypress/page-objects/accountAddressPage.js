@@ -70,4 +70,42 @@ export class AccountAddressPage {
     getZipCodeTextBox() {
         return cy.get(zipCodeTextBox);
     }
+
+    // Test helpers
+    validateUpdateAddress(userInfo) {
+        // Validate address api request
+        cy.wait('@updateAddress').then(({ request, response }) => {
+            const {
+                addressLine1,
+                addressLine2,
+                city,
+                firstName,
+                lastName,
+                phoneNumber,
+                postalCode,
+                region
+            } = request.body
+
+            expect(addressLine1).to.eq(userInfo.address.addr1);
+            expect(addressLine2).to.eq(userInfo.address.addr2);
+            expect(city).to.eq(userInfo.address.city);
+            expect(firstName).to.eq(userInfo.fname);
+            expect(lastName).to.eq(userInfo.lname);
+            expect(phoneNumber.replace(/[^0-9]/g, '')).to.eq(userInfo.phone);
+            expect(postalCode).to.eq(userInfo.address.zip);
+            expect(region).to.eq(userInfo.address.region);
+
+            // Validate address api response status
+            expect(response.statusCode, 'Update address request should be successful').to.eq(200);
+        })
+
+        // Validate UI
+        this.getEditShippingAddressButton().click();
+        this.getFirstNameTextBox().invoke('val').should('eq', userInfo.fname);
+        this.getLastNameTextBox().invoke('val').should('eq', userInfo.lname);
+        this.getAddress1TextBox().invoke('val').should('eq', userInfo.address.addr1);
+        this.getAddress2TextBox().invoke('val').should('eq', userInfo.address.addr2);
+        this.getCityTextBox().invoke('val').should('eq', userInfo.address.city);
+        this.getZipCodeTextBox().invoke('val').should('eq', userInfo.address.zip);
+    }
 }

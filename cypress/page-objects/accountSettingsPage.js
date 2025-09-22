@@ -84,4 +84,44 @@ export class AccountSettingsPage {
     getSaveChangesButton() {
         return cy.get(saveChangesButton);
     }
+
+    // Test helpers
+    validateUpdateProfile(userInfo) {
+        // Validate account/contact api request
+        cy.wait('@updateUser').then(({ request, response }) => {
+            const {
+                birthday,
+                email,
+                firstName,
+                lastName,
+                newEmail,
+                phoneNumber,
+                preferredContact
+            } = request.body
+
+            expect(birthday).to.eq(
+                `${userInfo.birthday.year}-${userInfo.birthday.month_2digit}-${userInfo.birthday.day_2digit}`
+            );
+            expect(email).to.eq(userInfo.email);
+            expect(firstName).to.eq(userInfo.fname);
+            expect(lastName).to.eq(userInfo.lname);
+            expect(newEmail).to.eq(userInfo.email);
+            expect(phoneNumber.replace(/[^0-9]/g, '')).to.eq(userInfo.phone);
+            expect(preferredContact).to.eq(userInfo.contactPrefAbbr);
+
+            // Validate account/contact response status
+            expect(response.statusCode, 'Response should be successful').to.eq(200);
+        })
+
+        //Validate UI
+        this.getBirthdateInput().invoke('val').should('eq', userInfo.birthdayFormatted);
+        this.getEmailTextBox().invoke('val').should('eq', userInfo.email);
+        this.getFirstNameTextBox().invoke('val').should('eq', userInfo.fname);
+        this.getLastNameTextBox().invoke('val').should('eq', userInfo.lname);
+        this.getPhoneNumberTextBox().invoke('val').then((value) => {
+            expect(value.replace(/[^0-9]/g, '')).to.eq(userInfo.phone);
+        })
+        this.getPreferredContactMethodValue().should('contain.text', userInfo.contactPref);
+
+    }
 }
